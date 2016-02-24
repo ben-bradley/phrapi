@@ -1,8 +1,12 @@
 'use strict';
 
 export default function(url) {
-  return url
-    .substr(url.indexOf('?') + 1)
+  let query = url.split('?')[1];
+  
+  if (!query)
+    return {};
+
+  return query
     .split('&')
     .reduce((qs, pair) => {
       let [ key, value ] = pair.split('=');

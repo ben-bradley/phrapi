@@ -1,7 +1,7 @@
 {
-  "name": "jsonapi",
+  "name": "phrapi",
   "version": "0.0.1",
-  "description": "A JSON REST API",
+  "description": "A dependency-free Promise Handling REST API",
   "main": "index.js",
   "dependencies": {},
   "devDependencies": {
@@ -11,10 +11,11 @@
     "gulp-nodemon": "^2.0.3",
     "gulp-run": "^1.6.8",
     "mocha": "^2.2.5",
-    "should": "^6.0.3"
+    "should": "^6.0.3",
+    "supertest": "^1.2.0"
   },
   "scripts": {
-    "test": "NODE_ENV=test mocha -R spec dist/test"
+    "test": "NODE_ENV=test mocha -R spec dist/test/spec.js"
   },
   "author": "Ben Bradley",
   "license": "MIT"

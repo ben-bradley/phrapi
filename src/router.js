@@ -1,45 +1,64 @@
 'use strict';
 
-const routes = [];
+const buildFingerprint = (path) =>  {
+  let params = path.match(/\{(.+?)\}/g) || [];
 
-const buildFingerprint = (path, params) =>  {
   return '^' + params.reduce((path, param) => {
     return path.replace(param, '([^\/\?]+?)');
   }, path) + '$';
 };
 
-export default {
-  route(options) {
-    let { path , method, flow } = options,
-      _params = path.match(/\{(.+?)\}/g) || [],
-      params = _params.map(p => p.replace(/[\{\}]/g, '')),
-      fingerprint = buildFingerprint(path, _params),
-      regex = new RegExp(fingerprint);
+const Router = ({ routes = [], basePath = '/' } = {}) => {
+  let router = {
+    routes: [],
 
-    method = method.toLowerCase();
+    route({ path , method, flow } = {}) {
+      if (!path)
+        throw new Error('Routes require a path.');
+      else if (!method)
+        throw new Error('Routes require a method.');
+      else if (!flow)
+        throw new Error('Routes require a flow.');
+        
+      path = (basePath + path).replace(/\/+/, '/');
 
-    let exists = routes.filter(r => r.method === method && r.fingerprint === fingerprint);
+      let params = (path.match(/\{(.+?)\}/g) || []).map(p => p.replace(/[\{\}]/g, '')),
+        fingerprint = buildFingerprint(path),
+        regex = new RegExp(fingerprint);
 
-    if (exists.length) {
-      let existing = exists[0].method.toUpperCase() + ' ' + exists[0].path,
-        duplicate = method.toUpperCase() + ' ' + path;
+      method = method.toLowerCase();
 
-      throw new Error('Route exists. Duplicate: ' + duplicate + ', Existing: ' + existing);
+      let exists = router.routes.filter(r => r.method === method && r.fingerprint === fingerprint);
+
+      if (exists.length) {
+        let existing = exists[0].method.toUpperCase() + ' ' + exists[0].path,
+          duplicate = method.toUpperCase() + ' ' + path;
+
+        throw new Error('Route exists. Duplicate: ' + duplicate + ', Existing: ' + existing);
+      }
+
+      let route = { method, path, flow, params, regex, fingerprint };
+
+      router.routes.push(route);
+    },
+
+    find(method, path) {
+      method = method.toLowerCase();
+      path = path.split('?')[0];
+
+      let route = router.routes.filter(r => r.method === method && path.match(r.regex));
+
+      if (!route.length)
+        return null;
+
+      return route[0];
     }
+  };
 
-    let route = { method, path, flow, params, regex, fingerprint };
+  if (routes.length)
+    routes.map(router.route);
 
-    routes.push(route);
-  },
-  find(method, path) {
-    method = method.toLowerCase();
-    path = path.split('?')[0];
-
-    let route = routes.filter(r => r.method === method && path.match(r.regex));
-
-    if (!route.length)
-      return null;
-
-    return route[0];
-  }
+  return router;
 };
+
+export default Router;

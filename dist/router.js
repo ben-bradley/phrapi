@@ -3,54 +3,78 @@
 Object.defineProperty(exports, '__esModule', {
   value: true
 });
-var routes = [];
+var buildFingerprint = function buildFingerprint(path) {
+  var params = path.match(/\{(.+?)\}/g) || [];
 
-var buildFingerprint = function buildFingerprint(path, params) {
   return '^' + params.reduce(function (path, param) {
     return path.replace(param, '([^\/\?]+?)');
   }, path) + '$';
 };
 
-exports['default'] = {
-  route: function route(options) {
-    var path = options.path;
-    var method = options.method;
-    var flow = options.flow;
-    var _params = path.match(/\{(.+?)\}/g) || [];
-    var params = _params.map(function (p) {
-      return p.replace(/[\{\}]/g, '');
-    });
-    var fingerprint = buildFingerprint(path, _params);
-    var regex = new RegExp(fingerprint);
+var Router = function Router() {
+  var _ref = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
-    method = method.toLowerCase();
+  var _ref$routes = _ref.routes;
+  var routes = _ref$routes === undefined ? [] : _ref$routes;
+  var _ref$basePath = _ref.basePath;
+  var basePath = _ref$basePath === undefined ? '/' : _ref$basePath;
 
-    var exists = routes.filter(function (r) {
-      return r.method === method && r.fingerprint === fingerprint;
-    });
+  var router = {
+    routes: [],
 
-    if (exists.length) {
-      var existing = exists[0].method.toUpperCase() + ' ' + exists[0].path,
-          duplicate = method.toUpperCase() + ' ' + path;
+    route: function route() {
+      var _ref2 = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
-      throw new Error('Route exists. Duplicate: ' + duplicate + ', Existing: ' + existing);
+      var path = _ref2.path;
+      var method = _ref2.method;
+      var flow = _ref2.flow;
+
+      if (!path) throw new Error('Routes require a path.');else if (!method) throw new Error('Routes require a method.');else if (!flow) throw new Error('Routes require a flow.');
+
+      path = (basePath + path).replace(/\/+/, '/');
+
+      var params = (path.match(/\{(.+?)\}/g) || []).map(function (p) {
+        return p.replace(/[\{\}]/g, '');
+      }),
+          fingerprint = buildFingerprint(path),
+          regex = new RegExp(fingerprint);
+
+      method = method.toLowerCase();
+
+      var exists = router.routes.filter(function (r) {
+        return r.method === method && r.fingerprint === fingerprint;
+      });
+
+      if (exists.length) {
+        var existing = exists[0].method.toUpperCase() + ' ' + exists[0].path,
+            duplicate = method.toUpperCase() + ' ' + path;
+
+        throw new Error('Route exists. Duplicate: ' + duplicate + ', Existing: ' + existing);
+      }
+
+      var route = { method: method, path: path, flow: flow, params: params, regex: regex, fingerprint: fingerprint };
+
+      router.routes.push(route);
+    },
+
+    find: function find(method, path) {
+      method = method.toLowerCase();
+      path = path.split('?')[0];
+
+      var route = router.routes.filter(function (r) {
+        return r.method === method && path.match(r.regex);
+      });
+
+      if (!route.length) return null;
+
+      return route[0];
     }
+  };
 
-    var route = { method: method, path: path, flow: flow, params: params, regex: regex, fingerprint: fingerprint };
+  if (routes.length) routes.map(router.route);
 
-    routes.push(route);
-  },
-  find: function find(method, path) {
-    method = method.toLowerCase();
-    path = path.split('?')[0];
-
-    var route = routes.filter(function (r) {
-      return r.method === method && path.match(r.regex);
-    });
-
-    if (!route.length) return null;
-
-    return route[0];
-  }
+  return router;
 };
+
+exports['default'] = Router;
 module.exports = exports['default'];

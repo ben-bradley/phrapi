@@ -1,18 +1,9 @@
 'use strict';
 
-import http from 'http';
-import handler from './handler';
-import router from './router';
+import Router from './router';
+import Server from './server';
+import Errors from './errors';
 
-const server = http.createServer(handler);
+const Phrapi = { Server, Router, Errors };
 
-export default {
-  start(port, callback) {
-    server.listen(port, callback);
-  },
-  route(options) {
-    let { method, path, handler } = options;
-
-    router.route(options);
-  }
-};
+export default Phrapi;

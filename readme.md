@@ -1,40 +1,201 @@
-# Your ES6 App!
+# Phrapi
 
-> A winner is you!
+> A Promise-handling REST API
 
-## Directory structure
+## Intent
 
+Phrapi is intended to be simple, composable, and deal exclusively with JSON-based REST.
+
+The goal is not to build a Hapi-level framework with authentication and templating baked in.  If you need those capabilities, use Hapi.  If, instead, you just need something light, fast, and simple, maybe give Phrapi a try.
+
+## About
+
+I've spent a lot of time working with frameworks like Hapi and Express and I really like both.  I tend to prefer Hapi, but there are occasions where Express is the right answer.
+
+I found that the way that I was building APIs began to follow a basic pattern that required me to reproduce the same code structures with predictable regularity.  That pattern is:
+
+- __Routes__ define paths and invoke handlers
+- __Handlers__ contain the business logic of the API and invoke controllers to access data
+- __Controllers__ CRUD data
+
+Within this pattern, I always made my controllers return promises so that they could be composed into the flows determined by the routes and executed by the handlers and I really liked it.  It was easy to make big changes and still have a codebase that was easy to read for someone that is unfamiliar with the code.
+
+What I felt like I was missing was the ability to have the handlers also deal in Promises.  The structure of the handler function is typically determined by the `route()` method of whatever framework you're using and generally follows the `(request, response[, next]) => {}` signature.  To compose a handler, you typically have to find a way to orchestrate the assignment of data to the request or response context.  Once you've done that, to make it work with Promises, you've got to start all function calls by returning a `new Promise()`.
+
+## Example
+
+```javascript
+// handlers.js
+'use strict';
+
+const handlers = {
+  ping(request, resolve, reject) {
+    resolve({ pong: new Date() });
+  },
+  foo(request, resolve, reject) {
+    let { params } = request;
+
+    resolve({ foo: 'URL {bar} param = ' + params.bar });
+  },
+  bar(request, resolve, reject) {
+    let { resolved } = request;
+
+    resolve({ bar: 'foo resolved = ' + resolved.foo });
+  }
+};
+
+export default handlers;
 ```
-config/
-dist/
-src/
-  index.js
-  bar.js
-gulpfile.js
-index.js
-package.json
-readme.md
+
+```javascript
+// routes.js
+'use strict';
+
+import { ping, foo, bar } from './handlers';
+
+const routes = [{
+  method: 'get',
+  path: '/ping',
+  flow: [ ping ]
+}, {
+  method: 'get',
+  path: '/foo/{bar}',
+  flow: [ foo, bar ]
+}];
+
+export default routes;
 ```
 
-## Gulps
+```javascript
+// server.js
+'use strict';
 
-- `gulp` - builds current `src/` to `dist/`, watches/builds `src/*.js`, and nodemons `index.js`
-- `gulp build` - builds current `src/` to `dist/` and exits
-- `gulp watch` - builds current `src/` to `dist/` and watches/builds `src/*.js`
-- `gulp nodemon` - nodemons `index.js`
+import Phrapi from 'phrapi';
+import routes from './routes';
 
-The app comes with `config` by default so you can use `NODE_ENV=xxx` to set up your environment
+const router = new Phrapi.Router({ routes });
 
-## Workflow
+const api = new Phrapi.Server({ router });
 
-The idea is that you work on code in the `src/` directory and when you save it, gulp will "compile" it from ES6 to ES5 and re-run your `index.js` automagically.
+api.start(3000, (err) => {
+  if (err)
+    throw err;
 
-1 Start `gulp`
-2 Edit & save code in `src/`
-3 Observe changes to app (app restarts via nodemon)
+  console.log('listening:', api.info);
+});
+```
 
-If you'd prefer to execute your code manually:
+```bash
+$ curl localhost:3000/ping
+{"pong":"2016-02-25T17:12:46.504Z"}
 
-1 Start `gulp watch`
-2 Edit & save code in `src/`
-3 Run your code `node ./index.js`
+$ curl localhost:3000/foo/baz
+{"bar":"foo resolved = URL {bar} param = baz"}
+```
+
+## Phrapi.Server
+
+The `Phrapi.Server()` call will return an object with three properties:
+
+1. `start(port, callback)`
+2. `route({ route })`
+3. `info`
+
+`Server()` accepts an optional `{ router: new Phrapi.Router() }` argument making it possible to compose your routing externally to the server code.
+
+`Server.route()` is a convenience call to `Router.route()`.
+
+## Phrapi.Router
+
+The `Phrapi.Router()` call returns a ... wait for it ... router object with three properties:
+
+1. `routes[]`
+2. `route({Route})`
+3. `find(method, path)`
+
+`Router()` accepts an optional `{ routes: [{Route}], pathPrefix: '/v1' }` argument so that you can also compose routes externally and mount them on a specific prefix
+
+```javascript
+const router = new Phrapi.Router({ basePath: '/v1' });
+
+router.route({
+  method: 'get',
+  path: '/foo',
+  flow: [(request, resolve, reject) => resolve({ foo: true }) ]
+});
+
+const server = new Phrapi.Server({ router });
+
+server.start(3000, (err) => {
+  if (err)
+    throw err;
+
+  console.log('server started:', server.info);
+});
+```
+
+```bash
+$ curl localhost:3000/v1/foo
+{"foo":true}
+```
+
+### Flows
+
+The `flow` property on a Route is where you compose your handlers to build a response.  The array is processed serially unless you group handler functions within an array.
+
+```javascript
+const routes = [{
+  method: 'get',
+  path: '/foo',
+  // when foo resolves, bar is called
+  flow: [ foo, bar ]
+}, {
+  method: 'get',
+  path: '/baz',
+  // when foo resolves, bar and baz are called with Promise.all
+  flow: [ foo, [ bar, baz ] ]
+}];
+```
+
+### Flow Handlers
+
+A flow handler expects the signature `(request, resolve, reject) => {}`.
+
+`resolve()` and `reject()` are the standard ES6 Promise calls.
+
+The `request` argument is the HTTP request that has been decorated with a few properties to make processing simple:
+
+- `params` - An object with key/value pairs parsed from the URL params defined in the route
+- `query` - An object with key/value pairs parsed from the query string
+- `payload` - The contents of any JSON sent with the request
+- `resolved` - When a flow has multiple handlers, the results of any previously resolved handlers are made available in the `request.resolved` object.  This makes it possible to quickly compose responses that require multiple database calls to construct the response JSON.  Think of this as being very similar to the `pre` option in Hapi route congifuration, except that it's built in by default.
+
+__Whatever the final handler resolves is what becomes the response JSON.__
+
+## Phrapi.Errors
+
+The `Phrapi.Errors` object has methods for easily composing standard HTTP errors.  It's very much inspired by `Boom`.
+
+```javascript
+const router = new Phrapi.Router({ basePath: '/v1' });
+
+router.route({
+  method: 'get',
+  path: '/error',
+  flow: [(request, resolve, reject) => reject(Phrapi.Errors.invalidRequest('go away!')) ]
+});
+
+const server = new Phrapi.Server({ router });
+
+server.start(3000, (err) => {
+  if (err)
+    throw err;
+
+  console.log('server started:', server.info);
+});
+```
+
+```bash
+$ curl localhost:3000/v1/error
+{"code":400,"message":"go away!"}
+```

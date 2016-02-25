@@ -8,7 +8,7 @@ const buildFingerprint = (path) =>  {
   }, path) + '$';
 };
 
-const Router = ({ routes = [], basePath = '/' } = {}) => {
+const Router = ({ routes = [], pathPrefix = '/' } = {}) => {
   let router = {
     routes: [],
 
@@ -19,8 +19,8 @@ const Router = ({ routes = [], basePath = '/' } = {}) => {
         throw new Error('Routes require a method.');
       else if (!flow)
         throw new Error('Routes require a flow.');
-        
-      path = (basePath + path).replace(/\/+/, '/');
+
+      path = (pathPrefix + path).replace(/\/+/, '/');
 
       let params = (path.match(/\{(.+?)\}/g) || []).map(p => p.replace(/[\{\}]/g, '')),
         fingerprint = buildFingerprint(path),

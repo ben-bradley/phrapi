@@ -16,8 +16,8 @@ var Router = function Router() {
 
   var _ref$routes = _ref.routes;
   var routes = _ref$routes === undefined ? [] : _ref$routes;
-  var _ref$basePath = _ref.basePath;
-  var basePath = _ref$basePath === undefined ? '/' : _ref$basePath;
+  var _ref$pathPrefix = _ref.pathPrefix;
+  var pathPrefix = _ref$pathPrefix === undefined ? '/' : _ref$pathPrefix;
 
   var router = {
     routes: [],
@@ -31,7 +31,7 @@ var Router = function Router() {
 
       if (!path) throw new Error('Routes require a path.');else if (!method) throw new Error('Routes require a method.');else if (!flow) throw new Error('Routes require a flow.');
 
-      path = (basePath + path).replace(/\/+/, '/');
+      path = (pathPrefix + path).replace(/\/+/, '/');
 
       var params = (path.match(/\{(.+?)\}/g) || []).map(function (p) {
         return p.replace(/[\{\}]/g, '');

@@ -1,7 +1,7 @@
 {
   "name": "phrapi",
   "version": "0.0.1",
-  "description": "A dependency-free Promise Handling REST API",
+  "description": "A Promise Handling REST API",
   "main": "index.js",
   "dependencies": {},
   "devDependencies": {

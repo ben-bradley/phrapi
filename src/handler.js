@@ -6,7 +6,7 @@ import params from './params';
 import Errors from './errors';
 import util from 'util';
 
-const headers = {
+const defaultHeaders = {
   'Content-Type': 'application/json'
 };
 
@@ -17,9 +17,12 @@ const validate = (obj) => {
   return obj;
 };
 
-const respond = (response, code, json) => {
+const respond = (request) => {
+  let { reply } = request,
+    { response, code, headers, payload } = reply;
+
   response.writeHead(code, headers);
-  response.end(JSON.stringify(json));
+  response.end(JSON.stringify(payload));
 };
 
 const wrap = (handler, request) => {
@@ -36,35 +39,50 @@ const wrap = (handler, request) => {
       .catch(reject));
 };
 
-const decorate = (request, route) => new Promise((resolve, reject) => {
-  // parse querystring to .query
-  request.query = querystring(request.url);
+const decorate = (request, response, route) =>
+  new Promise((resolve, reject) => {
+    // parse querystring to .query
+    request.query = querystring(request.url);
 
-  // extract params from the path to .params
-  request.params = params(request.url, route);
+    // extract params from the path to .params
+    if (route)
+      request.params = params(request.url, route);
 
-  // collect payload data on .payload
-  processPayload(request)
-    .then((payload) => request.payload = payload)
-    .then(() => resolve({}))
-    .catch(reject);
-});
+    // build the resolved accumulator
+    request.resolved = {};
 
-const coerceError = (response, err) => {
+    // build the reply object
+    request.reply = {
+      response,
+      headers: Object.assign({}, defaultHeaders),
+      code: 200,
+      payload: {}
+    };
+
+    // collect payload data on .payload
+    processPayload(request)
+      .then((payload) => request.payload = payload)
+      .then(() => resolve({}))
+      .catch(reject);
+  });
+
+const coerceError = (request, err) => {
   if (!err)
     err = Errors.internalError('Unknown error');
   else if (!err._phrapiError)
     err = Errors.internalError(err.message || err);
 
-  err._phrapiError = undefined;
+  let { code, error } = err;
 
-  let reply = {
-    code: err.code,
-    error: err.error.message
-  };
+  request.reply.code = err.code;
+  request.reply.payload = { code, error: error.message };
 
-  return respond(response, err.code, reply);
-}
+  return request;
+};
+
+const notFound = (request, resolve, reject) => {
+  reject(Errors.notFound());
+};
 
 const Handler = ({ router } = {}) => {
   if (!router)
@@ -72,20 +90,17 @@ const Handler = ({ router } = {}) => {
 
   return (request, response) => {
     let { method, url } = request,
-      route = router.find(method, url);
+      route = router.find(method, url),
+      flow = (route) ? route.flow : [ notFound ];
 
-    request.resolved = {};
-
-    if (!route)
-      return respond(response, 404, Errors.notFound(method + ' ' + url));
-
-    route.flow.reduce((promise, handler) => promise
+    flow.reduce((promise, handler) => promise
       .then(obj => validate(obj))
       .then(obj => Object.assign(request.resolved, obj))
-      .then(() => wrap(handler, request)), decorate(request, route))
+      .then(() => wrap(handler, request)), decorate(request, response, route))
     .then(obj => validate(obj))
-    .then(reply => respond(response, 200, reply))
-    .catch(err => coerceError(response, err));
+    .then(obj => Object.assign(request.reply.payload, obj))
+    .then(() => respond(request))
+    .catch(err => respond(coerceError(request, err)));
   };
 };
 

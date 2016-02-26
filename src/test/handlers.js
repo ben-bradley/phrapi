@@ -41,6 +41,14 @@ export default {
 
   rejectNoArgs(request, resolve, reject) {
     reject();
+  },
+
+  customHeaders(request, resolve, reject) {
+    let { reply } = request;
+
+    reply.headers['x-custom'] = 'blargh';
+
+    resolve(Object.assign({}, request.resolved));
   }
 
 };

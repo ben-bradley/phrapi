@@ -1,6 +1,16 @@
 'use strict';
 
-import { bar, foo, decorate, parallel, badRequest, error, rejector, rejectNoArgs } from './handlers';
+import {
+  bar,
+  foo,
+  decorate,
+  parallel,
+  badRequest,
+  error,
+  rejector,
+  rejectNoArgs,
+  customHeaders
+} from './handlers';
 
 export default [{
   method: 'get',
@@ -34,4 +44,8 @@ export default [{
   method: 'get',
   path: '/rejectNoArgs',
   flow: [ rejectNoArgs ]
+}, {
+  method: 'get',
+  path: '/customHeaders',
+  flow: [ foo, customHeaders ]
 }];

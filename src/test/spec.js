@@ -191,6 +191,15 @@ describe('Phrapi', () => {
         });
     });
 
+    it('GET /customHeaders', (done) => {
+      req.get('/customHeaders')
+        .expect(200, { foo: 'bar' })
+        .expect('x-custom', 'blargh')
+        .end((err, res) => {
+          done(err);
+        });
+    });
+
   });
 
 });

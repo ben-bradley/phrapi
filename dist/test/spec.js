@@ -195,5 +195,11 @@ describe('Phrapi', function () {
         done(err);
       });
     });
+
+    it('GET /customHeaders', function (done) {
+      req.get('/customHeaders').expect(200, { foo: 'bar' }).expect('x-custom', 'blargh').end(function (err, res) {
+        done(err);
+      });
+    });
   });
 });

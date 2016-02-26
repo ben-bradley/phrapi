@@ -58,6 +58,14 @@ exports['default'] = {
 
   rejectNoArgs: function rejectNoArgs(request, resolve, reject) {
     reject();
+  },
+
+  customHeaders: function customHeaders(request, resolve, reject) {
+    var reply = request.reply;
+
+    reply.headers['x-custom'] = 'blargh';
+
+    resolve(Object.assign({}, request.resolved));
   }
 
 };

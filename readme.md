@@ -1,4 +1,4 @@
-# Phrapi
+# Phrapi [![Build Status](https://secure.travis-ci.org/ben-bradley/phrapi.png?branch=master)](https://travis-ci.org/ben-bradley/phrapi)
 
 > A Promise-handling REST API
 
@@ -169,6 +169,7 @@ The `request` argument is the HTTP request that has been decorated with a few pr
 - `query` - An object with key/value pairs parsed from the query string
 - `payload` - The contents of any JSON sent with the request
 - `resolved` - When a flow has multiple handlers, the results of any previously resolved handlers are made available in the `request.resolved` object.  This makes it possible to quickly compose responses that require multiple database calls to construct the response JSON.  Think of this as being very similar to the `pre` option in Hapi route congifuration, except that it's built in by default.
+- `reply` - __CAUTION__ The `reply` property gives you access to tinker with the response HTTP status code, headers, and payload.  You __should not__ mutate payload through this interface!  To mutate the response payload, use the `resolve({})` interface.  If you need to change the `code` or add `headers`, however, this is the place to do that.
 
 __Whatever the final handler resolves is what becomes the response JSON.__
 
@@ -199,3 +200,7 @@ server.start(3000, (err) => {
 $ curl localhost:3000/v1/error
 {"code":400,"message":"go away!"}
 ```
+
+## TODO
+
+- Allow for custom 404

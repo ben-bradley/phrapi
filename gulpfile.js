@@ -35,7 +35,7 @@ function monitor() {
 }
 
 function test() {
-  return run('NODE_ENV=test mocha -R spec').exec();
+  return run('NODE_ENV=test mocha -R spec dist/test/spec').exec();
 }
 
 function watchTest() {

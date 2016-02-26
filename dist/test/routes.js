@@ -38,5 +38,9 @@ exports['default'] = [{
   method: 'get',
   path: '/rejectNoArgs',
   flow: [_handlers.rejectNoArgs]
+}, {
+  method: 'get',
+  path: '/customHeaders',
+  flow: [_handlers.foo, _handlers.customHeaders]
 }];
 module.exports = exports['default'];

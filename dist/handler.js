@@ -26,7 +26,7 @@ var _util = require('util');
 
 var _util2 = _interopRequireDefault(_util);
 
-var headers = {
+var defaultHeaders = {
   'Content-Type': 'application/json'
 };
 
@@ -36,9 +36,15 @@ var validate = function validate(obj) {
   return obj;
 };
 
-var respond = function respond(response, code, json) {
+var respond = function respond(request) {
+  var reply = request.reply;
+  var response = reply.response;
+  var code = reply.code;
+  var headers = reply.headers;
+  var payload = reply.payload;
+
   response.writeHead(code, headers);
-  response.end(JSON.stringify(json));
+  response.end(JSON.stringify(payload));
 };
 
 var wrap = function wrap(handler, request) {
@@ -61,13 +67,24 @@ var wrap = function wrap(handler, request) {
   });
 };
 
-var decorate = function decorate(request, route) {
+var decorate = function decorate(request, response, route) {
   return new Promise(function (resolve, reject) {
     // parse querystring to .query
     request.query = (0, _querystring2['default'])(request.url);
 
     // extract params from the path to .params
-    request.params = (0, _params2['default'])(request.url, route);
+    if (route) request.params = (0, _params2['default'])(request.url, route);
+
+    // build the resolved accumulator
+    request.resolved = {};
+
+    // build the reply object
+    request.reply = {
+      response: response,
+      headers: Object.assign({}, defaultHeaders),
+      code: 200,
+      payload: {}
+    };
 
     // collect payload data on .payload
     (0, _payload2['default'])(request).then(function (payload) {
@@ -78,17 +95,21 @@ var decorate = function decorate(request, route) {
   });
 };
 
-var coerceError = function coerceError(response, err) {
+var coerceError = function coerceError(request, err) {
   if (!err) err = _errors2['default'].internalError('Unknown error');else if (!err._phrapiError) err = _errors2['default'].internalError(err.message || err);
 
-  err._phrapiError = undefined;
+  var _err = err;
+  var code = _err.code;
+  var error = _err.error;
 
-  var reply = {
-    code: err.code,
-    error: err.error.message
-  };
+  request.reply.code = err.code;
+  request.reply.payload = { code: code, error: error.message };
 
-  return respond(response, err.code, reply);
+  return request;
+};
+
+var notFound = function notFound(request, resolve, reject) {
+  reject(_errors2['default'].notFound());
 };
 
 var Handler = function Handler() {
@@ -102,12 +123,9 @@ var Handler = function Handler() {
     var method = request.method;
     var url = request.url;
     var route = router.find(method, url);
+    var flow = route ? route.flow : [notFound];
 
-    request.resolved = {};
-
-    if (!route) return respond(response, 404, _errors2['default'].notFound(method + ' ' + url));
-
-    route.flow.reduce(function (promise, handler) {
+    flow.reduce(function (promise, handler) {
       return promise.then(function (obj) {
         return validate(obj);
       }).then(function (obj) {
@@ -115,12 +133,14 @@ var Handler = function Handler() {
       }).then(function () {
         return wrap(handler, request);
       });
-    }, decorate(request, route)).then(function (obj) {
+    }, decorate(request, response, route)).then(function (obj) {
       return validate(obj);
-    }).then(function (reply) {
-      return respond(response, 200, reply);
+    }).then(function (obj) {
+      return Object.assign(request.reply.payload, obj);
+    }).then(function () {
+      return respond(request);
     })['catch'](function (err) {
-      return coerceError(response, err);
+      return respond(coerceError(request, err));
     });
   };
 };

@@ -1,5 +1,7 @@
 'use strict';
 
+import Errors from './errors';
+
 const processPayload = (request) => new Promise((resolve, reject) => {
   let payload = '';
 
@@ -9,8 +11,7 @@ const processPayload = (request) => new Promise((resolve, reject) => {
       return resolve({});
 
     try { resolve(JSON.parse(payload)); }
-    catch(err) { reject({ code: 400, message: 'invalid payload' }); }
-  });
-});
+    catch(err) { reject(Errors.badRequest()); }
+  }); });
 
 export default processPayload;

@@ -68,7 +68,7 @@ const decorate = (request, response, route) =>
 
 const coerceError = (request, err) => {
   if (!err)
-    err = Errors.internalError('Unknown error');
+    err = Errors.internalError('Unknown error, something was rejected');
   else if (!err._phrapiError)
     err = Errors.internalError(err.message || err);
 

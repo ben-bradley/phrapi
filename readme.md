@@ -204,3 +204,5 @@ $ curl localhost:3000/v1/error
 ## TODO
 
 - Allow for custom 404
+- encapsulate `request` and `response` into `context`
+- make `server.test(method, path[, payload]).then().catch();` work

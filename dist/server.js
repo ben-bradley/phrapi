@@ -43,8 +43,8 @@ var Server = function Server() {
         if (callback) return callback();
       });
     },
-    stop: function stop() {
-      _server.close();
+    stop: function stop(callback) {
+      _server.close(callback);
     },
     route: function route(_route) {
       router.route(_route);

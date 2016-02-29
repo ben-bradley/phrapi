@@ -22,8 +22,8 @@ const Server = ({ router = new Router() } = {}) => {
           return callback();
       });
     },
-    stop() {
-      _server.close();
+    stop(callback) {
+      _server.close(callback);
     },
     route(route) {
       router.route(route);

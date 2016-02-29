@@ -185,7 +185,7 @@ describe('Phrapi', () => {
 
     it('GET /rejectNoArgs', (done) => {
       req.get('/rejectNoArgs')
-        .expect(500, { code: 500, error: 'Unknown error' })
+        .expect(500, { code: 500, error: 'Unknown error, something was rejected' })
         .end((err, res) => {
           done(err);
         });

@@ -191,7 +191,7 @@ describe('Phrapi', function () {
     });
 
     it('GET /rejectNoArgs', function (done) {
-      req.get('/rejectNoArgs').expect(500, { code: 500, error: 'Unknown error' }).end(function (err, res) {
+      req.get('/rejectNoArgs').expect(500, { code: 500, error: 'Unknown error, something was rejected' }).end(function (err, res) {
         done(err);
       });
     });

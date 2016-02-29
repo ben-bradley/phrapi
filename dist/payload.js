@@ -3,6 +3,13 @@
 Object.defineProperty(exports, '__esModule', {
   value: true
 });
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+var _errors = require('./errors');
+
+var _errors2 = _interopRequireDefault(_errors);
+
 var processPayload = function processPayload(request) {
   return new Promise(function (resolve, reject) {
     var payload = '';
@@ -16,7 +23,7 @@ var processPayload = function processPayload(request) {
       try {
         resolve(JSON.parse(payload));
       } catch (err) {
-        reject({ code: 400, message: 'invalid payload' });
+        reject(_errors2['default'].badRequest());
       }
     });
   });

@@ -18,8 +18,8 @@ const validate = (obj) => {
 };
 
 const respond = (request) => {
-  let { reply } = request,
-    { response, code, headers, payload } = reply;
+  let { response, reply } = request,
+    { code, headers, payload } = reply;
 
   response.writeHead(code, headers);
   response.end(JSON.stringify(payload));
@@ -51,9 +51,11 @@ const decorate = (request, response, route) =>
     // build the resolved accumulator
     request.resolved = {};
 
+    // add the response
+    request.response = response;
+
     // build the reply object
     request.reply = {
-      response,
       headers: Object.assign({}, defaultHeaders),
       code: 200,
       payload: {}

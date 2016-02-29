@@ -37,8 +37,8 @@ var validate = function validate(obj) {
 };
 
 var respond = function respond(request) {
+  var response = request.response;
   var reply = request.reply;
-  var response = reply.response;
   var code = reply.code;
   var headers = reply.headers;
   var payload = reply.payload;
@@ -78,9 +78,11 @@ var decorate = function decorate(request, response, route) {
     // build the resolved accumulator
     request.resolved = {};
 
+    // add the response
+    request.response = response;
+
     // build the reply object
     request.reply = {
-      response: response,
       headers: Object.assign({}, defaultHeaders),
       code: 200,
       payload: {}
@@ -96,7 +98,7 @@ var decorate = function decorate(request, response, route) {
 };
 
 var coerceError = function coerceError(request, err) {
-  if (!err) err = _errors2['default'].internalError('Unknown error');else if (!err._phrapiError) err = _errors2['default'].internalError(err.message || err);
+  if (!err) err = _errors2['default'].internalError('Unknown error, something was rejected');else if (!err._phrapiError) err = _errors2['default'].internalError(err.message || err);
 
   var _err = err;
   var code = _err.code;

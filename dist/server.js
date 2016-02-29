@@ -18,6 +18,10 @@ var _router = require('./router');
 
 var _router2 = _interopRequireDefault(_router);
 
+var _test2 = require('./test');
+
+var _test3 = _interopRequireDefault(_test2);
+
 var Server = function Server() {
   var _ref = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
@@ -39,8 +43,18 @@ var Server = function Server() {
         if (callback) return callback();
       });
     },
+    stop: function stop() {
+      _server.close();
+    },
     route: function route(_route) {
       router.route(_route);
+    },
+    test: function test(_ref2) {
+      var method = _ref2.method;
+      var path = _ref2.path;
+      var payload = _ref2.payload;
+
+      return (0, _test3['default'])({ server: server, method: method, path: path, payload: payload });
     },
     router: router
   };

@@ -26,5 +26,9 @@ exports['default'] = [{
   method: 'get',
   path: '/all',
   flow: [_handlers.qux, [_handlers.foo, _handlers.baz]]
+}, {
+  method: 'get',
+  path: '/ping',
+  flow: [_handlers.ping]
 }];
 module.exports = exports['default'];

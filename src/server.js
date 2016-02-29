@@ -3,6 +3,7 @@
 import http from 'http';
 import Handler from './handler';
 import Router from './router';
+import test from './test';
 
 const Server = ({ router = new Router() } = {}) => {
   let handler = new Handler({ router }),
@@ -21,8 +22,14 @@ const Server = ({ router = new Router() } = {}) => {
           return callback();
       });
     },
+    stop() {
+      _server.close();
+    },
     route(route) {
       router.route(route);
+    },
+    test({ method, path, payload }) {
+      return test({ server, method, path, payload });
     },
     router
   };

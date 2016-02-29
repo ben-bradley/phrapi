@@ -51,6 +51,18 @@ describe('Phrapi', function () {
       });
     });
 
+    describe('server.stop()', function () {
+      it('should stop the server', function (done) {
+        var api = new _2['default'].Server();
+
+        api.start(0, function () {
+          _asserts2['default'].startedServer(api);
+          api.stop();
+          done();
+        });
+      });
+    });
+
     describe('server.route()', function () {
       it('should create a route', function () {
         var api = new _2['default'].Server();
@@ -69,6 +81,20 @@ describe('Phrapi', function () {
           api.route(_routes2['default'][0]);
           api.route(_routes2['default'][0]);
         }).should['throw'];
+      });
+    });
+
+    describe('server.test()', function () {
+
+      it('should exercise routes via http.request', function (done) {
+        var router = new _2['default'].Router({ routes: _routes2['default'] });
+        var api = new _2['default'].Server({ router: router });
+
+        api.test({ method: 'get', path: '/foo' }).then(function (json) {
+          json.should.be.an.Object['with'].property('foo');
+          json.foo.should.eql('bar');
+          done();
+        })['catch'](done);
       });
     });
   });

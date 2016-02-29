@@ -95,15 +95,57 @@ $ curl localhost:3000/foo/baz
 
 ## Phrapi.Server
 
-The `Phrapi.Server()` call will return an object with three properties:
+The `Phrapi.Server()` call will return an object with five properties:
 
 1. `start(port, callback)`
-2. `route({ route })`
-3. `info`
+2. `stop()`
+3. `route({ route })`
+4. `test({ method, path[, payload] })`
+5. `info`
 
 `Server()` accepts an optional `{ router: new Phrapi.Router() }` argument making it possible to compose your routing externally to the server code.
 
 `Server.route()` is a convenience call to `Router.route()`.
+
+### `Server.test({ method, path[, payload] })`
+
+In an effort to make testing as easy as possible, the `test()` method was added to the `Server`.  This will programmatically call `server.start(0, () => {})` and send an actual `http.request()` call to trigger the route.
+
+```javascript
+'use strict';
+
+import Phrapi from '../';
+import routes from './routes';
+
+const router = new Phrapi.Router({ routes });
+
+const server = new Phrapi.Server({ router });
+
+server.test({
+  method: 'get',
+  path: '/ping'
+}).then(json => {
+  // assert on json
+  console.log('you got back:', json);
+}).catch(err => {
+  console.log('There was an error!');
+  console.log(err.message);
+  process.exit(1);
+});
+
+server.test({
+  method: 'post',
+  path: '/foo',
+  payload: { blargh: 'honk' }
+}).then(json => {
+  // assert on json
+  console.log('you got back:', json);
+}).catch(err => {
+  console.log('There was an error!');
+  console.log(err.message);
+  process.exit(1);
+});
+```
 
 ## Phrapi.Router
 
@@ -201,8 +243,12 @@ $ curl localhost:3000/v1/error
 {"code":400,"message":"go away!"}
 ```
 
+## Versions
+
+- 0.1.0 - Added `Server.stop()` and `Server.test()`
+- 0.0.2 - Added `reply` to `request` in Handler signature
+- 0.0.1 - Initial release
+
 ## TODO
 
 - Allow for custom 404
-- encapsulate `request` and `response` into `context`
-- make `server.test(method, path[, payload]).then().catch();` work

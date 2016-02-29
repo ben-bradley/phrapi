@@ -36,6 +36,18 @@ describe('Phrapi', () => {
       });
     });
 
+    describe('server.stop()', () => {
+      it('should stop the server', (done) => {
+        let api = new Phrapi.Server();
+
+        api.start(0, () => {
+          asserts.startedServer(api);
+          api.stop();
+          done();
+        });
+      });
+    });
+
     describe('server.route()', () => {
       it('should create a route', () => {
         let api = new Phrapi.Server();
@@ -55,6 +67,24 @@ describe('Phrapi', () => {
           api.route(routes[0]);
         }).should.throw;
       });
+    });
+
+    describe('server.test()', () => {
+
+      it('should exercise routes via http.request', (done) => {
+        let router = new Phrapi.Router({ routes });
+        let api = new Phrapi.Server({ router });
+
+        api.test({ method: 'get', path: '/foo' })
+          .then(json => {
+            (json).should.be.an.Object.with.property('foo');
+            (json.foo).should.eql('bar');
+            done();
+          })
+          .catch(done);
+
+      });
+
     });
 
   });

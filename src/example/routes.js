@@ -1,6 +1,6 @@
 'use strict';
 
-import { bar, foo, baz, postfoo, bail, qux } from './handlers';
+import { bar, foo, baz, postfoo, bail, qux, ping } from './handlers';
 
 export default [{
   method: 'get',
@@ -22,4 +22,8 @@ export default [{
   method: 'get',
   path: '/all',
   flow: [ qux, [ foo, baz ] ]
+}, {
+  method: 'get',
+  path: '/ping',
+  flow: [ ping ]
 }];

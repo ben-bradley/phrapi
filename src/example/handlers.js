@@ -35,6 +35,10 @@ export default {
   postfoo(request, resolve, reject) {
     console.log('postfoo: ', request.payload);
     resolve({ payload: request.payload });
+  },
+
+  ping(request, resolve, reject) {
+    resolve({ pong: new Date() });
   }
 
 };

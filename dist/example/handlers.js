@@ -42,6 +42,10 @@ exports['default'] = {
   postfoo: function postfoo(request, resolve, reject) {
     console.log('postfoo: ', request.payload);
     resolve({ payload: request.payload });
+  },
+
+  ping: function ping(request, resolve, reject) {
+    resolve({ pong: new Date() });
   }
 
 };

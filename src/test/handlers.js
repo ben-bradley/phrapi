@@ -4,55 +4,55 @@ import Errors from '../errors';
 
 export default {
 
-  foo(request, resolve, reject) {
+  foo(ctx, resolve, reject) {
     resolve({ foo: 'bar' });
   },
 
-  bar(request, resolve, reject) {
-    let { params, query, resolved, payload } = request,
+  bar(ctx, resolve, reject) {
+    let { params, query, resolved, payload } = ctx,
       { foo } = resolved;
 
     resolve({ bar: 'baz', foo });
   },
 
-  decorate(request, resolve, reject) {
-    let { params, query, resolved, payload } = request;
+  decorate(ctx, resolve, reject) {
+    let { params, query, resolved, payload } = ctx;
 
     resolve({ params, query, resolved, payload });
   },
 
-  parallel(request, resolve, reject) {
-    let { params, query, resolved, payload } = request;
+  parallel(ctx, resolve, reject) {
+    let { params, query, resolved, payload } = ctx;
 
     resolve({ parallel: true, resolved });
   },
 
-  resolveNoObject(request, resolve, reject) {
+  resolveNoObject(ctx, resolve, reject) {
     resolve();
   },
 
-  badRequest(request, resolve, reject) {
+  badRequest(ctx, resolve, reject) {
     reject(Errors.badRequest('Bad Request'));
   },
 
-  error(request, resolve, reject) {
+  error(ctx, resolve, reject) {
     reject(new Error('foobar'));
   },
 
-  rejector(request, resolve, reject) {
+  rejector(ctx, resolve, reject) {
     reject('foobar');
   },
 
-  rejectNoArgs(request, resolve, reject) {
+  rejectNoArgs(ctx, resolve, reject) {
     reject();
   },
 
-  customHeaders(request, resolve, reject) {
-    let { reply } = request;
+  customHeaders(ctx, resolve, reject) {
+    let { reply } = ctx;
 
     reply.headers['x-custom'] = 'blargh';
 
-    resolve(Object.assign({}, request.resolved));
+    resolve(Object.assign({}, ctx.resolved));
   }
 
 };

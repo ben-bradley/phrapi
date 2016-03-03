@@ -13,60 +13,57 @@ const defaultHeaders = {
 const validate = (obj) => {
   if (obj === undefined)
     return {};
-    
+
   if (!util.isObject(obj))
     throw new Error('Flow handlers must resolve an object: ' + obj);
 
   return obj;
 };
 
-const respond = (request) => {
-  let { response, reply } = request,
+const respond = (ctx) => {
+  let { response, reply } = ctx,
     { code, headers, payload } = reply;
 
   response.writeHead(code, headers);
   response.end(JSON.stringify(payload));
 };
 
-const wrap = (handler, request) => {
+const wrap = (handler, ctx) => {
   if (typeof handler === 'function')
-    return new Promise((resolve, reject) => handler(request, resolve, reject));
+    return new Promise((resolve, reject) => handler(ctx, resolve, reject));
 
   else if (util.isArray(handler))
     return new Promise((resolve, reject) => // wrap Promise.all in a promise
       Promise.all(handler.map((handler) =>
-        new Promise((_resolve, _reject) => handler(request, _resolve, _reject))
+        new Promise((_resolve, _reject) => handler(ctx, _resolve, _reject))
       ))
       .then((results) => // when .all() is done, resolve the returned promise
         resolve(results.reduce((obj, result) => Object.assign(obj, result), {})))
       .catch(reject));
 };
 
-const decorate = (request, response, route) =>
+const decorate = (ctx, route) =>
   new Promise((resolve, reject) => {
     // parse querystring to .query
-    request.query = querystring(request.url);
+    ctx.query = querystring(ctx.request.url);
 
     // extract params from the path to .params
     if (route)
-      request.params = params(request.url, route);
+      ctx.params = params(ctx.request.url, route);
 
     // build the resolved accumulator
-    request.resolved = {};
-
-    // add the response
-    request.response = response;
+    ctx.resolved = {};
 
     // build the reply object
-    request.reply = {
+    ctx.reply = {
       headers: Object.assign({}, defaultHeaders),
       code: 200,
       payload: {}
     };
 
     // collect payload data on .payload
-    processPayload(request)
-      .then((payload) => request.payload = payload)
+    processPayload(ctx.request)
+      .then((payload) => ctx.payload = payload)
       .then(() => resolve({}))
       .catch(reject);
   });
@@ -98,14 +95,16 @@ const Handler = ({ router } = {}) => {
       route = router.find(method, url),
       flow = (route) ? route.flow : [ notFound ];
 
+    let ctx = { request, response };
+
     flow.reduce((promise, handler) => promise
       .then(obj => validate(obj))
-      .then(obj => Object.assign(request.resolved, obj))
-      .then(() => wrap(handler, request)), decorate(request, response, route))
+      .then(obj => Object.assign(ctx.resolved, obj))
+      .then(() => wrap(handler, ctx)), decorate(ctx, route))
     .then(obj => validate(obj))
-    .then(obj => Object.assign(request.reply.payload, obj))
-    .then(() => respond(request))
-    .catch(err => respond(coerceError(request, err)));
+    .then(obj => Object.assign(ctx.reply.payload, obj))
+    .then(() => respond(ctx))
+    .catch(err => respond(coerceError(ctx, err)));
   };
 };
 

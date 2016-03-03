@@ -29,16 +29,16 @@ What I felt like I was missing was the ability to have the handlers also deal in
 'use strict';
 
 const handlers = {
-  ping(request, resolve, reject) {
+  ping(ctx, resolve, reject) {
     resolve({ pong: new Date() });
   },
-  foo(request, resolve, reject) {
-    let { params } = request;
+  foo(ctx, resolve, reject) {
+    let { params } = ctx;
 
     resolve({ foo: 'URL {bar} param = ' + params.bar });
   },
-  bar(request, resolve, reject) {
-    let { resolved } = request;
+  bar(ctx, resolve, reject) {
+    let { resolved } = ctx;
 
     resolve({ bar: 'foo resolved = ' + resolved.foo });
   }
@@ -163,7 +163,7 @@ const router = new Phrapi.Router({ pathPrefix: '/v1' });
 router.route({
   method: 'get',
   path: '/foo',
-  flow: [(request, resolve, reject) => resolve({ foo: true }) ]
+  flow: [(ctx, resolve, reject) => resolve({ foo: true }) ]
 });
 
 const server = new Phrapi.Server({ router });
@@ -201,19 +201,22 @@ const routes = [{
 
 ### Flow Handlers
 
-A flow handler expects the signature `(request, resolve, reject) => {}`.
+A flow handler expects the signature `(ctx, resolve, reject) => {}`.
 
 `resolve()` and `reject()` are the standard ES6 Promise calls.
 
-The `request` argument is the HTTP request that has been decorated with a few properties to make processing simple:
+The `ctx` argument is the context of the request/response that has been decorated with a few properties to make processing simple:
 
 - `params` - An object with key/value pairs parsed from the URL params defined in the route
 - `query` - An object with key/value pairs parsed from the query string
 - `payload` - The contents of any JSON sent with the request
-- `resolved` - When a flow has multiple handlers, the results of any previously resolved handlers are made available in the `request.resolved` object.  This makes it possible to quickly compose responses that require multiple database calls to construct the response JSON.  Think of this as being very similar to the `pre` option in Hapi route congifuration, except that it's built in by default.
+- `resolved` - When a flow has multiple handlers, the results of any previously resolved handlers are made available in the `ctx.resolved` object.  This makes it possible to quickly compose responses that require multiple database calls to construct the response JSON.  Think of this as being very similar to the `pre` option in Hapi route congifuration, except that it's built in by default.
 - `reply` - __CAUTION__ The `reply` property gives you access to tinker with the response HTTP status code, headers, and payload.  You __should not__ mutate payload through this interface!  To mutate the response payload, use the `resolve({})` interface.  If you need to change the `code` or add `headers`, however, this is the place to do that.
 
-__Whatever the final handler resolves is what becomes the response JSON.__
+> __Whatever the final handler resolves is what becomes the response JSON.__
+
+- `request` - The raw HTTP request
+- `response` - The raw HTTP response.  While you _'can'_ make `response.end()` calls here, you _'should'_ rely on the `resolve()` and `reject()` process to ensure that your composed routes function as expected.
 
 ## Phrapi.Errors
 
@@ -225,7 +228,7 @@ const router = new Phrapi.Router({ pathPrefix: '/v1' });
 router.route({
   method: 'get',
   path: '/error',
-  flow: [(request, resolve, reject) => reject(Phrapi.Errors.invalidRequest('go away!')) ]
+  flow: [(ctx, resolve, reject) => reject(Phrapi.Errors.invalidRequest('go away!')) ]
 });
 
 const server = new Phrapi.Server({ router });
@@ -245,6 +248,8 @@ $ curl localhost:3000/v1/error
 
 ## Versions
 
+- 1.0.0 - __Breaking change__ - Converted handler signature to `(ctx, resolve, reject)` where `ctx = { request, response, reply, params, query, payload, resolved }`
+- 0.1.1 - Readme fix
 - 0.1.0 - Added `Server.stop()` and `Server.test()`
 - 0.0.2 - Added `reply` to `request` in Handler signature
 - 0.0.1 - Initial release

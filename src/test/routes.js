@@ -9,7 +9,8 @@ import {
   error,
   rejector,
   rejectNoArgs,
-  customHeaders
+  customHeaders,
+  resolveNoObject
 } from './handlers';
 
 export default [{
@@ -48,4 +49,8 @@ export default [{
   method: 'get',
   path: '/customHeaders',
   flow: [ foo, customHeaders ]
+}, {
+  method: 'get',
+  path: '/resolveNoObject',
+  flow: [ resolveNoObject ]
 }];

@@ -227,5 +227,11 @@ describe('Phrapi', function () {
         done(err);
       });
     });
+
+    it('GET /resolveNoObject', function (done) {
+      req.get('/resolveNoObject').expect(200, {}).end(function (err, res) {
+        done(err);
+      });
+    });
   });
 });

@@ -44,6 +44,10 @@ exports['default'] = {
     resolve({ parallel: true, resolved: resolved });
   },
 
+  resolveNoObject: function resolveNoObject(request, resolve, reject) {
+    resolve();
+  },
+
   badRequest: function badRequest(request, resolve, reject) {
     reject(_errors2['default'].badRequest('Bad Request'));
   },

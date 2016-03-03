@@ -11,6 +11,9 @@ const defaultHeaders = {
 };
 
 const validate = (obj) => {
+  if (obj === undefined)
+    return {};
+    
   if (!util.isObject(obj))
     throw new Error('Flow handlers must resolve an object: ' + obj);
 

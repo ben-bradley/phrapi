@@ -27,6 +27,10 @@ export default {
     resolve({ parallel: true, resolved });
   },
 
+  resolveNoObject(request, resolve, reject) {
+    resolve();
+  },
+
   badRequest(request, resolve, reject) {
     reject(Errors.badRequest('Bad Request'));
   },

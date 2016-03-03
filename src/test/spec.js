@@ -230,6 +230,14 @@ describe('Phrapi', () => {
         });
     });
 
+    it('GET /resolveNoObject', (done) => {
+      req.get('/resolveNoObject')
+        .expect(200, {})
+        .end((err, res) => {
+          done(err);
+        });
+    });
+
   });
 
 });

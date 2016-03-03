@@ -42,5 +42,9 @@ exports['default'] = [{
   method: 'get',
   path: '/customHeaders',
   flow: [_handlers.foo, _handlers.customHeaders]
+}, {
+  method: 'get',
+  path: '/resolveNoObject',
+  flow: [_handlers.resolveNoObject]
 }];
 module.exports = exports['default'];

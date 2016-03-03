@@ -158,7 +158,7 @@ The `Phrapi.Router()` call returns a ... wait for it ... router object with thre
 `Router()` accepts an optional `{ routes: [{Route}], pathPrefix: '/v1' }` argument so that you can also compose routes externally and mount them on a specific prefix
 
 ```javascript
-const router = new Phrapi.Router({ basePath: '/v1' });
+const router = new Phrapi.Router({ pathPrefix: '/v1' });
 
 router.route({
   method: 'get',
@@ -220,7 +220,7 @@ __Whatever the final handler resolves is what becomes the response JSON.__
 The `Phrapi.Errors` object has methods for easily composing standard HTTP errors.  It's very much inspired by `Boom`.
 
 ```javascript
-const router = new Phrapi.Router({ basePath: '/v1' });
+const router = new Phrapi.Router({ pathPrefix: '/v1' });
 
 router.route({
   method: 'get',

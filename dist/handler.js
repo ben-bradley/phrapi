@@ -38,9 +38,9 @@ var validate = function validate(obj) {
   return obj;
 };
 
-var respond = function respond(request) {
-  var response = request.response;
-  var reply = request.reply;
+var respond = function respond(ctx) {
+  var response = ctx.response;
+  var reply = ctx.reply;
   var code = reply.code;
   var headers = reply.headers;
   var payload = reply.payload;
@@ -49,14 +49,14 @@ var respond = function respond(request) {
   response.end(JSON.stringify(payload));
 };
 
-var wrap = function wrap(handler, request) {
+var wrap = function wrap(handler, ctx) {
   if (typeof handler === 'function') return new Promise(function (resolve, reject) {
-    return handler(request, resolve, reject);
+    return handler(ctx, resolve, reject);
   });else if (_util2['default'].isArray(handler)) return new Promise(function (resolve, reject) {
     return (// wrap Promise.all in a promise
       Promise.all(handler.map(function (handler) {
         return new Promise(function (_resolve, _reject) {
-          return handler(request, _resolve, _reject);
+          return handler(ctx, _resolve, _reject);
         });
       })).then(function (results) {
         return (// when .all() is done, resolve the returned promise
@@ -69,30 +69,27 @@ var wrap = function wrap(handler, request) {
   });
 };
 
-var decorate = function decorate(request, response, route) {
+var decorate = function decorate(ctx, route) {
   return new Promise(function (resolve, reject) {
     // parse querystring to .query
-    request.query = (0, _querystring2['default'])(request.url);
+    ctx.query = (0, _querystring2['default'])(ctx.request.url);
 
     // extract params from the path to .params
-    if (route) request.params = (0, _params2['default'])(request.url, route);
+    if (route) ctx.params = (0, _params2['default'])(ctx.request.url, route);
 
     // build the resolved accumulator
-    request.resolved = {};
-
-    // add the response
-    request.response = response;
+    ctx.resolved = {};
 
     // build the reply object
-    request.reply = {
+    ctx.reply = {
       headers: Object.assign({}, defaultHeaders),
       code: 200,
       payload: {}
     };
 
     // collect payload data on .payload
-    (0, _payload2['default'])(request).then(function (payload) {
-      return request.payload = payload;
+    (0, _payload2['default'])(ctx.request).then(function (payload) {
+      return ctx.payload = payload;
     }).then(function () {
       return resolve({});
     })['catch'](reject);
@@ -129,22 +126,24 @@ var Handler = function Handler() {
     var route = router.find(method, url);
     var flow = route ? route.flow : [notFound];
 
+    var ctx = { request: request, response: response };
+
     flow.reduce(function (promise, handler) {
       return promise.then(function (obj) {
         return validate(obj);
       }).then(function (obj) {
-        return Object.assign(request.resolved, obj);
+        return Object.assign(ctx.resolved, obj);
       }).then(function () {
-        return wrap(handler, request);
+        return wrap(handler, ctx);
       });
-    }, decorate(request, response, route)).then(function (obj) {
+    }, decorate(ctx, route)).then(function (obj) {
       return validate(obj);
     }).then(function (obj) {
-      return Object.assign(request.reply.payload, obj);
+      return Object.assign(ctx.reply.payload, obj);
     }).then(function () {
-      return respond(request);
+      return respond(ctx);
     })['catch'](function (err) {
-      return respond(coerceError(request, err));
+      return respond(coerceError(ctx, err));
     });
   };
 };

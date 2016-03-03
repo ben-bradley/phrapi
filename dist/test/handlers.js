@@ -12,64 +12,64 @@ var _errors2 = _interopRequireDefault(_errors);
 
 exports['default'] = {
 
-  foo: function foo(request, resolve, reject) {
+  foo: function foo(ctx, resolve, reject) {
     resolve({ foo: 'bar' });
   },
 
-  bar: function bar(request, resolve, reject) {
-    var params = request.params;
-    var query = request.query;
-    var resolved = request.resolved;
-    var payload = request.payload;
+  bar: function bar(ctx, resolve, reject) {
+    var params = ctx.params;
+    var query = ctx.query;
+    var resolved = ctx.resolved;
+    var payload = ctx.payload;
     var foo = resolved.foo;
 
     resolve({ bar: 'baz', foo: foo });
   },
 
-  decorate: function decorate(request, resolve, reject) {
-    var params = request.params;
-    var query = request.query;
-    var resolved = request.resolved;
-    var payload = request.payload;
+  decorate: function decorate(ctx, resolve, reject) {
+    var params = ctx.params;
+    var query = ctx.query;
+    var resolved = ctx.resolved;
+    var payload = ctx.payload;
 
     resolve({ params: params, query: query, resolved: resolved, payload: payload });
   },
 
-  parallel: function parallel(request, resolve, reject) {
-    var params = request.params;
-    var query = request.query;
-    var resolved = request.resolved;
-    var payload = request.payload;
+  parallel: function parallel(ctx, resolve, reject) {
+    var params = ctx.params;
+    var query = ctx.query;
+    var resolved = ctx.resolved;
+    var payload = ctx.payload;
 
     resolve({ parallel: true, resolved: resolved });
   },
 
-  resolveNoObject: function resolveNoObject(request, resolve, reject) {
+  resolveNoObject: function resolveNoObject(ctx, resolve, reject) {
     resolve();
   },
 
-  badRequest: function badRequest(request, resolve, reject) {
+  badRequest: function badRequest(ctx, resolve, reject) {
     reject(_errors2['default'].badRequest('Bad Request'));
   },
 
-  error: function error(request, resolve, reject) {
+  error: function error(ctx, resolve, reject) {
     reject(new Error('foobar'));
   },
 
-  rejector: function rejector(request, resolve, reject) {
+  rejector: function rejector(ctx, resolve, reject) {
     reject('foobar');
   },
 
-  rejectNoArgs: function rejectNoArgs(request, resolve, reject) {
+  rejectNoArgs: function rejectNoArgs(ctx, resolve, reject) {
     reject();
   },
 
-  customHeaders: function customHeaders(request, resolve, reject) {
-    var reply = request.reply;
+  customHeaders: function customHeaders(ctx, resolve, reject) {
+    var reply = ctx.reply;
 
     reply.headers['x-custom'] = 'blargh';
 
-    resolve(Object.assign({}, request.resolved));
+    resolve(Object.assign({}, ctx.resolved));
   }
 
 };
